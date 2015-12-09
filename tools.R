@@ -1,7 +1,7 @@
 learnModel <- function(data, labels){
   # Learn logit regression
   lambda <- 0.15
-  result <- matrix(data = 0, nrow = 10, ncol = ncol(data)+1, byrow = T)
+  result <- matrix(data = 0, nrow = 10, ncol = ncol(data) + 1, byrow = T)
   initial_theta <- 0 * 1 : (ncol(data) + 1)
   for (i in 1:10){
     print(i)
