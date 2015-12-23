@@ -1,13 +1,12 @@
 learnModel <- function(data, labels){
   # Learn logit regression
   lambda <- 0.15
-  result <- matrix(data = 0, nrow = 10, ncol = ncol(data) + 1, byrow = T)
-  initial_theta <- 0 * 1 : (ncol(data) + 1)
-  for (i in 1:10){
-    print(i - 1)
-    buff <- optim(initial_theta, logRegCostFunction, gr = gradLinRegCostFunction,
-    	data=cbind(1, data), labels = (labels == (i - 1)), lambda = lambda, method = "CG")
-    result[i,] <- buff$par
+  result <- matrix(data = 10, nrow = 10, ncol = ncol(data) + 1, byrow = T)
+  data <- cbind(1, data)
+  initial_theta <- 0 * 1 : (ncol(data))
+  for (i in 0:9){
+    print(i)
+    result[i,] <- GradDesc(initial_theta, data, (labels == i), lambda)
   }
   return(result)
 }
@@ -19,13 +18,48 @@ testModel <- function(classifier, testData){
   return(result)
 }
 
-logRegCostFunction <- function(theta, data, labels, lambda){
-  result <- (sum(-labels * log(sFunc(data %*% theta)) - (1 - labels) * log(1 - sFunc(data %*% theta)))) * (1 / length(labels)) + 
-      (sum(sum(theta[2 : length(theta)]^2))) * (lambda / (2 * length(labels)))
-  return(result)
+#logRegCostFunction <- function(theta, data, labels, lambda){
+#  # Cost function for logit regression
+#  print('jopa')
+#  result <- (sum((-labels) * log(sFunc(data %*% theta)) - (1 - labels) * log(1 - sFunc(data %*% theta)))) * (1 / length(labels)) + 
+#      (sum(sum(theta[2 : length(theta)]^2))) * (lambda / (2 * length(labels)))
+#  return(result)
+#}
+
+
+logRegCostFunction <- function(theta, X, y, lambda){
+  # Calculate Cost Funcrtion
+  m<-length(y);
+  # Error term
+  
+  temp <- sFunc(X%*%theta)
+  r1 <- 1/m
+  r2 <- sum(-y*log(temp*0.99999999999+0.0000000000000000001)-(1-y)*log(1-temp*0.99999999999+0.0000000000000000001))
+  
+  #   print("r1")
+  #   print(r1)
+  #   print("r2")
+  #   print(r2)
+  
+  # Regularization term
+  r3 <- lambda/(2*m)
+  r4 <- sum(sum(theta[2:length(theta)]^2))
+  
+  #   print("r3")
+  #   print(r3)
+  #   print("r4")
+  #   print(r4)
+  
+  res <- r1*r2+r3*r4
+  
+  #   print("res in lrCostFunction")
+  #   print(res)
+  
+  return(res)
 }
 
-gradLinRegCostFunction <- function(theta, data, labels, lambda){
+
+gradLogRegCostFunction <- function(theta, data, labels, lambda){
   # Returns gradient for cost function
   result <- 1 / length(labels) * colSums((sFunc(data %*% theta) - labels) %*% rep(1, length(theta)) * data)
   result[2 : length(result)] <- result[2 : length(result)] + lambda / length(labels) * theta[2 : length(theta)]
@@ -73,4 +107,17 @@ print(fmeasure)
 # FDR
 FDR <- FP / (FP + TP)
 print(FDR)
+}
+
+GradDesc <- function(theta, data, labels, lambda){
+  #Gradient descent
+  repeat{
+    initial_theta <- theta
+    gradFunc <- gradLogRegCostFunction(initial_theta, data, labels, lambda)
+    theta <- initial_theta - 0.001 * gradFunc
+    if(sum((initial_theta - theta)^2) < 0.00001){
+      return(theta)
+    }
+  }
+  return(theta)
 }
